@@ -4,12 +4,12 @@
 
 
 <!-- ABOUT THE PROJECT -->
-## About The Package
+## About the Package
 This package uses pre-trained neural network (NN) models to predict Troyon (no-wall) $\beta_\mathrm{N}$ limits for a given equilibrium.
 There are two different NN models with either MLP or CNN architectures, whose training dataset were generated with the [CHEASE](https://doi.org/10.1016/0010-4655(92)90167-W) and [MARS-F](https://doi.org/10.1063/1.1287744) codes for the equilibrium and MHD stability, respectively.
 This package employs the pre-trained NN models and provides some useful interfaces to make it compatible with the IMAS data structure and [**FUSE**](https://github.com/ProjectTorreyPines/FUSE.jl) [<img src="https://i.sstatic.net/tskMh.png">](https://github.com/ProjectTorreyPines/FUSE.jl) ecosystem.
 
-## About NN models
+## About the NN models
 Note that the following two models are each valid for a specific range of plasma parameters (e.g., aspect ratio and shape).
 For example, the MLP model can cover a wider range of aspect ratio ($A\in[1.3, 4.0]$), while the CNN model only targets a specific aspect ratio ($A \sim 2.74$) since it is designed for the HL-2M tokamak.
 On the other hand, the MLP model can only hanlde the positive triangularity ($\sigma>0$), but the CNN model can deal with a range of triangularity ($\sigma \in [-0.6, 0.8]$), including the negative triangularity.
@@ -24,7 +24,7 @@ This model can cover a wider range of plasma parameters
 * Output
     * Troyon $\beta_\mathrm{N}$ limits for $n=(1,2,3)$ toroidal modes
 
-### 2. CNN (Convolutional neural network) model
+### 2. CNN (Convolutional Neural Network) model
 Developed and trained by Yifei Zhao, *et al.*. (see [[Y.F. Zhao, *et al.*, *PPCF* (2022)]](https://doi.org/10.1088/1361-6587/ac4524) for details)
 * Input
     * 2D boundary shape
@@ -106,12 +106,12 @@ We acknowledge Yeifei Zhao (Dalian University of Technology; <zhaoyifei@swip.ac.
 ["Neural network based fast prediction of βN limits in HL-2M"](https://doi.org/10.1088/1361-6587/ac4524)
 
 * **[CHEASE code]**\
-H. Lütjens, A. Bondeson, A. Roy, *Comput. Phys. Commun.* **69**  (1992) 287 \
+H. Lütjens, A. Bondeson, and A. Roy, *Comput. Phys. Commun.* **69**  (1992) 287 \
 ["Axisymmetric MHD equilibrium solver with bicubic Hermite elements"](https://doi.org/10.1016/0010-4655(92)90167-W)
 
 * **[MARS-F code]**\
-Y. Q. Liu, A. Bondeson, C. M. Fransson, B. Lennartson, C. Breitholtz,
-*Phys. Plasmas* **7** (2000) 3681
+Y. Q. Liu, A. Bondeson, C. M. Fransson, B. Lennartson, and C. Breitholtz,
+*Phys. Plasmas* **7** (2000) 3681 \
 ["Feedback stabilization of nonaxisymmetric resistive wall modes in tokamaks. I. Electromagnetic model"](https://doi.org/10.1063/1.1287744)
 
 
