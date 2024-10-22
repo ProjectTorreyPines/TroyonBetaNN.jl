@@ -167,22 +167,22 @@ function _print_results_to_stdout(MLPs::Vector{MLP_Model}; kwargs...)
     verbose = get(kwargs, :verbose, false)
     eq_betaN = get(kwargs, :eq_betaN, -1.0)
 
+    MLP_stability_vec = Vector{String}(undef, length(MLPs),)
+    for (n, MLP) in pairs(MLPs)
+        if (eq_betaN > MLP.βₙ_limit)
+            MLP_stability_vec[n] = "Unstable"
+        elseif eq_betaN > 0.95*MLP.βₙ_limit
+            MLP_stability_vec[n] = "Marginal"
+        else
+            MLP_stability_vec[n] = "Stable"
+        end
+    end
+
     if verbose && eq_betaN > 0
         blue_bold = Crayon(foreground=:blue, bold=true)
         magenta_bold = Crayon(foreground=:magenta, bold=true)
 
         header = ["Tor. mode", "Troyon βₙ Limit", "Stabiltiy"]
-
-        MLP_stability_vec = Vector{String}(undef, length(MLPs),)
-        for (n, MLP) in pairs(MLPs)
-            if (eq_betaN > MLP.βₙ_limit)
-                MLP_stability_vec[n] = "Unstable"
-            elseif eq_betaN > 0.95*MLP.βₙ_limit
-                MLP_stability_vec[n] = "Marginal"
-            else
-                MLP_stability_vec[n] = "Stable"
-            end
-        end
 
         data = hcat(getfield.(MLPs,:n), getfield.(MLPs,:βₙ_limit), MLP_stability_vec)
 
@@ -204,9 +204,9 @@ function _print_results_to_stdout(MLPs::Vector{MLP_Model}; kwargs...)
             title_same_width_as_table=true
         )
     else
-        @printf("\n(MLP model): Troyon Beta_N Limits\n")
-        for this_MLP in MLPs
-            @printf("↳ (n=%d): βₙ=%.3f\n", this_MLP.n, this_MLP.βₙ_limit)
+        @printf("\n[MLP]: Troyon Beta_N Limits\n")
+        for (n,this_MLP) in pairs(MLPs)
+            @printf("  ↳ (n=%d): βₙ=%.3f (%s)\n", this_MLP.n, this_MLP.βₙ_limit, MLP_stability_vec[n])
         end
     end
 end
@@ -215,19 +215,21 @@ function _print_results_to_stdout(CNN::CNN_Model; kwargs...)
     verbose = get(kwargs, :verbose, false)
     eq_betaN = get(kwargs, :eq_betaN, -1.0)
 
+    if (eq_betaN > CNN.βₙ_limit)
+        stability = "Unstable"
+    elseif eq_betaN > 0.95*CNN.βₙ_limit
+        stability = "Marginal"
+    else
+        stability = "Stable"
+    end
+
     if verbose && eq_betaN > 0
         blue_bold = Crayon(foreground=:blue, bold=true)
         magenta_bold = Crayon(foreground=:magenta, bold=true)
 
         header = ["Tor. mode", "Troyon βₙ Limit", "Stabiltiy"]
 
-        if (eq_betaN > CNN.βₙ_limit)
-            stability = "Unstable"
-        elseif eq_betaN > 0.95*CNN.βₙ_limit
-            stability = "Marginal"
-        else
-            stability = "Stable"
-        end
+
         data = hcat(CNN.n, CNN.βₙ_limit, stability)
 
         hl1 = Highlighter( (data, i, j) -> (j in (1,3)) && (data[i, end]=="Unstable"), crayon"red bold");
@@ -248,8 +250,8 @@ function _print_results_to_stdout(CNN::CNN_Model; kwargs...)
             title_same_width_as_table=true
         )
     else
-        @printf("\n(CNN model): Troyon Beta_N Limits\n")
-        @printf("↳ (n=%d): βₙ=%.3f\n", CNN.n, CNN.βₙ_limit)
+        @printf("\n[CNN]: Troyon Beta_N Limits\n")
+        @printf("  ↳ (n=%d): βₙ=%.3f (%s)\n", CNN.n, CNN.βₙ_limit, stability)
     end
 end
 
@@ -329,7 +331,7 @@ function check_parameter(name::String, value::Float64, range::Tuple{Float64, Flo
 
     if value < lower || value > upper
         if (~verbose)
-            @warn("($(model_name)): $name "* @sprintf("(%.3f)",value)* " is outside the limit [$lower ~ $upper]")
+            @warn("[$(model_name)]: $name "* @sprintf("(%.3f)",value)* " is outside the limit [$lower ~ $upper]")
         end
         status = "Out of Range"
     else
@@ -337,7 +339,7 @@ function check_parameter(name::String, value::Float64, range::Tuple{Float64, Flo
         upper_edge = upper - 0.05 * range_width
         if value < lower_edge || value>upper_edge
             if (~verbose)
-                @info("$model_name: $name "* @sprintf("(%.3f)",value)* " is too close to the limit [$lower, $upper]")
+                @info("[$model_name]: $name "* @sprintf("(%.3f)",value)* " is too close to the limit [$lower, $upper]")
             end
             status = "Marginal"
         else
@@ -355,7 +357,7 @@ function check_parameter_positivity(name::String, value::Float64;  kwargs...)
         status = "Okay"
     else
         if (~verbose)
-            @warn("($model_name): $name "* @sprintf("(%.3f)",value)* " is negative. Out of trained range")
+            @warn("[$model_name]: $name "* @sprintf("(%.3f)",value)* " is negative. Out of trained range")
         end
         status = "Out of Range"
     end
