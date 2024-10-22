@@ -7,6 +7,7 @@ using BSplineKit
 using Printf
 using Plots
 using PrettyTables
+using StyledStrings
 
 import ONNXRunTime as ORT
 
@@ -694,5 +695,114 @@ function plot_sample_points(TD::Troyon_Data, eqt::IMAS.equilibrium__time_slice; 
     println("\nPlot of Sample_Points is saved into:", white_bold(file_name))
     display(fig)
 end
+
+function test_pretty_table()
+
+    # == Creating the Table ====================================================================
+
+     v1_t = 0:5:20
+
+     v1_a = ones(length(v1_t)) * 1.0
+
+     v1_v = @. 0 + v1_a * v1_t
+
+     v1_d = @. 0 + v1_a * v1_t^2 / 2
+
+     v2_t = 0:5:20
+
+     v2_a = ones(length(v2_t)) * 0.75
+
+     v2_v = @. 0 + v2_a * v2_t
+
+     v2_d = @. 0 + v2_a * v2_t^2 / 2
+
+     table = [
+      v1_t v1_a v1_v v1_d
+      v2_t v2_a v2_v v2_d
+    ];
+
+    # == Configuring the Table =================================================================
+
+     title = "Table 1. Data obtained from the test procedure."
+
+     subtitle = "Comparison between two vehicles"
+
+     column_labels = [
+        [EmptyCells(2), MultiColumn(2, "Estimated Data")],
+        ["Time (s)", "Acceleration", "Velocity", "Position"],
+    ]
+
+     units = [
+      styled"{(foreground=gray):[s]}",
+      styled"{(foreground=gray):[m / s²]}",
+      styled"{(foreground=gray):[m / s]}",
+      styled"{(foreground=gray):[m]}",
+    ]
+
+     push!(column_labels, units)
+
+     merge_column_label_cells = :auto
+
+     row_group_labels = [
+        1 => "Vehicle #1",
+        6 => "Vehicle #2"
+    ]
+
+     summary_rows = [
+        (data, j) -> maximum(@views data[ 1:5, j]),
+        (data, j) -> maximum(@views data[6:10, j]),
+    ]
+
+     summary_row_labels = [
+        "Max. for Vehicle #1",
+        "Max. for Vehicle #2",
+    ]
+
+     footnotes = [
+        (:column_label, 1, 3) => "Estimated data based on the acceleration measurement."
+    ]
+
+     highlighters = [
+        TextHighlighter((data, i, j) -> (j == 3) && (data[i, j] > 10), crayon"fg:red bold")
+        TextHighlighter((data, i, j) -> (j == 4) && (data[i, j] > 10), crayon"fg:blue bold")
+    ]
+
+     tf = TextTableFormat(
+        # Remove vertical lines.
+        right_vertical_lines_at_data_columns = :none,
+        vertical_line_after_data_columns     = false,
+        vertical_line_after_row_label_column = false,
+        vertical_line_at_beginning           = false,
+    )
+
+     style = TextTableStyle(
+        column_label                   = crayon"bold",
+        first_line_merged_column_label = crayon"fg:yellow bold underline",
+        footnote                       = crayon"fg:cyan",
+        row_group_label                = crayon"fg:magenta bold",
+        subtitle                       = crayon"italics",
+        title                          = crayon"fg:yellow bold",
+    )
+
+    # == Printing the Table ====================================================================
+
+     pretty_table(
+        table;
+        column_labels,
+        footnotes,
+        highlighters,
+        merge_column_label_cells,
+        row_group_labels,
+        style,
+        subtitle,
+        summary_row_labels,
+        summary_rows,
+        tf,
+        title,
+    )
+
+
+end
+
 
 end # module TroyonBetaNN

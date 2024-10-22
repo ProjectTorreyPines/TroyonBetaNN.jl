@@ -5,6 +5,8 @@ using IMAS
 
 @testset "TroyonBetaNN.jl" begin
 
+    TBNN.test_pretty_table()
+
     file_path = joinpath(@__DIR__, "data", "dd_D3D.json")
     dd = IMAS.json2imas(file_path);
     TD_vec = TBNN.Calculate_Troyon_beta_limits_for_IMAS_dd(dd; verbose=true);
