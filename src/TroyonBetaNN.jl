@@ -437,6 +437,12 @@ function _set_CNN_input_neurons_from_sampled_points(TD::Troyon_Data,  eqt::IMAS.
     PPF = eqt.profiles_1d.pressure[1] / Take_1D_average_over_volume(eqt, eqt.profiles_1d.pressure)
     input_5 = Float32.(reshape([PPF],1,1))
 
+
+    #  TODO: check what exactly input_4 and input_5 are
+    # Here, we assume that input_4 is "PPF" and input_5 is "li", which looks more reasonable
+    # Swap input_4 and input_5
+    input_4, input_5 = input_5, input_4
+
     TD.CNN.input = Dict("input_1"=>input_1, "input_2"=>input_2, "input_3"=>input_3, "input_4"=>input_4, "input_5"=>input_5)
 end
 

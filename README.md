@@ -76,7 +76,7 @@ This will give the following verbose terminal output and write figure file of sa
 <br />
 
 
-Sample points for a FPP equilibrium:
+Sample points for a DIII-D equilibrium:
 <br />
 <div align="center">
     <img src="assets/Troyon_Sample_Points.png" width=70%>
