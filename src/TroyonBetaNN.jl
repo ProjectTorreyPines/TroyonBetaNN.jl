@@ -149,10 +149,7 @@ function Calculate_Troyon_beta_limits_for_a_given_time_slice(TD::Troyon_Data, eq
 
 
     equilibrium_βₙ = eqt.global_quantities.beta_normal
-    # _print_results_to_stdout(TD; eq_betaN=equilibrium_βₙ ,kwargs...)
-
-    _print_results_to_stdout(TD.MLPs; eq_betaN=equilibrium_βₙ ,kwargs...)
-    _print_results_to_stdout(TD.CNN; eq_betaN=equilibrium_βₙ ,kwargs...)
+    _print_results_to_stdout(TD; eq_betaN=equilibrium_βₙ ,kwargs...)
 
     verbose = get(kwargs, :verbose, false)
     if verbose
@@ -161,75 +158,8 @@ function Calculate_Troyon_beta_limits_for_a_given_time_slice(TD::Troyon_Data, eq
 end
 
 function _print_results_to_stdout(TD; kwargs...)
-    verbose = get(kwargs, :verbose, false)
-    eq_betaN = get(kwargs, :eq_betaN, -1.0)
-
-    if verbose && eq_betaN > 0
-        white_bold = Crayon(foreground=:white, bold=true)
-        blue_bold = Crayon(foreground=:blue, bold=true)
-
-        header = ["Tor. mode", "Troyon βₙ Limit", @sprintf("Equilibrium (βₙ=%.2f)",eq_betaN)]
-
-        MLP_stability_vec = Vector{String}(undef, length(TD.MLPs),)
-        for (n, MLP) in pairs(TD.MLPs)
-            if (eq_betaN > MLP.βₙ_limit)
-                MLP_stability_vec[n] = "Unstable"
-            elseif eq_betaN > 0.95*MLP.βₙ_limit
-                MLP_stability_vec[n] = "Marginal"
-            else
-                MLP_stability_vec[n] = "Stable"
-            end
-        end
-
-        data = hcat(getfield.(TD.MLPs,:n), getfield.(TD.MLPs,:βₙ_limit), MLP_stability_vec)
-
-        hl1 = Highlighter( (data, i, j) -> (j in (1,3)) && (data[i, end]=="Unstable"), crayon"red bold");
-        hl2 = Highlighter( (data, i, j) -> (j in (1,3)) && (data[i, end]=="Marginal"), crayon"yellow bold");
-        hl3 = Highlighter( (data, i, j) -> (j==3) && (data[i, end]=="Stable"), crayon"green");
-
-        println("\n",blue_bold("MLP: "), white_bold("(Troyon βₙ Limits) vs (Equilibrium "), blue_bold(@sprintf("βₙ=%.2f",eq_betaN)), ")")
-        pretty_table(
-            data;
-            formatters    = ft_printf("%5.3f", 2:4),
-            header        = header,
-            header_crayon = crayon"white bold",
-            highlighters  = (hl1, hl2, hl3),
-            tf            = tf_unicode_rounded
-        )
-
-        if (eq_betaN > TD.CNN.βₙ_limit)
-            CNN_stabiltiy = "Unstable"
-        elseif eq_betaN > 0.95*TD.CNN.βₙ_limit
-            CNN_stabiltiy = "Marginal"
-        else
-            CNN_stabiltiy = "Stable"
-        end
-        data = hcat(TD.CNN.n, TD.CNN.βₙ_limit, CNN_stabiltiy)
-
-        hl1 = Highlighter( (data, i, j) -> (j in (1,3)) && (data[i, end]=="Unstable"), crayon"red bold");
-        hl2 = Highlighter( (data, i, j) -> (j in (1,3)) && (data[i, end]=="Marginal"), crayon"yellow bold");
-        hl3 = Highlighter( (data, i, j) -> (j==3) && (data[i, end]=="Stable"), crayon"green");
-
-        println("\n",blue_bold("CNN: "), white_bold("(Troyon βₙ Limits) vs (Equilibrium "), blue_bold(@sprintf("βₙ=%.2f",eq_betaN)), ")")
-        pretty_table(
-            data;
-            formatters    = ft_printf("%5.3f", 2:4),
-            header        = header,
-            header_crayon = crayon"white bold",
-            highlighters  = (hl1, hl2, hl3),
-            tf            = tf_unicode_rounded
-        )
-
-    else
-        @printf("\nTroyon (no-wall) Beta Limits\n")
-        @printf("(MLP model):\n")
-        for this_MLP in TD.MLPs
-            @printf("↳ (n=%d): βₙ=%.3f\n", this_MLP.n, this_MLP.βₙ_limit)
-        end
-
-        @printf("\n(CNN model):\n")
-        @printf("↳ (n=%d): βₙ=%.3f\n", TD.CNN.n, TD.CNN.βₙ_limit)
-    end
+    _print_results_to_stdout(TD.MLPs; kwargs...)
+    _print_results_to_stdout(TD.CNN; kwargs...)
 end
 
 
@@ -238,10 +168,10 @@ function _print_results_to_stdout(MLPs::Vector{MLP_Model}; kwargs...)
     eq_betaN = get(kwargs, :eq_betaN, -1.0)
 
     if verbose && eq_betaN > 0
-        white_bold = Crayon(foreground=:white, bold=true)
         blue_bold = Crayon(foreground=:blue, bold=true)
+        magenta_bold = Crayon(foreground=:magenta, bold=true)
 
-        header = ["Tor. mode", "Troyon βₙ Limit", @sprintf("Equilibrium (βₙ=%.2f)",eq_betaN)]
+        header = ["Tor. mode", "Troyon βₙ Limit", "Stabiltiy"]
 
         MLP_stability_vec = Vector{String}(undef, length(MLPs),)
         for (n, MLP) in pairs(MLPs)
@@ -260,14 +190,18 @@ function _print_results_to_stdout(MLPs::Vector{MLP_Model}; kwargs...)
         hl2 = Highlighter( (data, i, j) -> (j in (1,3)) && (data[i, end]=="Marginal"), crayon"yellow bold");
         hl3 = Highlighter( (data, i, j) -> (j==3) && (data[i, end]=="Stable"), crayon"green");
 
-        println("\n",blue_bold("MLP: "), white_bold("(Troyon βₙ Limits) vs (Equilibrium "), blue_bold(@sprintf("βₙ=%.2f",eq_betaN)), ")")
+        model_name = magenta_bold("[MLP model]")
+        str_eq_betaN = blue_bold(@sprintf("βₙ=%.2f",eq_betaN))
         pretty_table(
             data;
             formatters    = ft_printf("%5.3f", 2:4),
             header        = header,
             header_crayon = crayon"white bold",
             highlighters  = (hl1, hl2, hl3),
-            tf            = tf_unicode_rounded
+            tf            = tf_unicode_rounded,
+            title = "\n$model_name\n (Equilibrium $str_eq_betaN)",
+                title_alignment=:c,
+            title_same_width_as_table=true
         )
     else
         @printf("\n(MLP model): Troyon Beta_N Limits\n")
@@ -282,10 +216,10 @@ function _print_results_to_stdout(CNN::CNN_Model; kwargs...)
     eq_betaN = get(kwargs, :eq_betaN, -1.0)
 
     if verbose && eq_betaN > 0
-        white_bold = Crayon(foreground=:white, bold=true)
         blue_bold = Crayon(foreground=:blue, bold=true)
+        magenta_bold = Crayon(foreground=:magenta, bold=true)
 
-        header = ["Tor. mode", "Troyon βₙ Limit", @sprintf("Equilibrium (βₙ=%.2f)",eq_betaN)]
+        header = ["Tor. mode", "Troyon βₙ Limit", "Stabiltiy"]
 
         if (eq_betaN > CNN.βₙ_limit)
             stability = "Unstable"
@@ -300,14 +234,18 @@ function _print_results_to_stdout(CNN::CNN_Model; kwargs...)
         hl2 = Highlighter( (data, i, j) -> (j in (1,3)) && (data[i, end]=="Marginal"), crayon"yellow bold");
         hl3 = Highlighter( (data, i, j) -> (j==3) && (data[i, end]=="Stable"), crayon"green");
 
-        println("\n",blue_bold("CNN: "), white_bold("(Troyon βₙ Limits) vs (Equilibrium "), blue_bold(@sprintf("βₙ=%.2f",eq_betaN)), ")")
+        model_name = magenta_bold("[CNN model]")
+        str_eq_betaN = blue_bold(@sprintf("βₙ=%.2f",eq_betaN))
         pretty_table(
             data;
             formatters    = ft_printf("%5.3f", 2:4),
             header        = header,
             header_crayon = crayon"white bold",
             highlighters  = (hl1, hl2, hl3),
-            tf            = tf_unicode_rounded
+            tf            = tf_unicode_rounded,
+            title = "\n$model_name\n (Equilibrium $str_eq_betaN)",
+            title_alignment=:c,
+            title_same_width_as_table=true
         )
     else
         @printf("\n(CNN model): Troyon Beta_N Limits\n")
@@ -335,21 +273,14 @@ function Check_validity_of_NN_for_given_input(MLPs::Vector{MLP_Model}, eqt::IMAS
     # Internal inductance
     li = eqt.global_quantities.li_3
 
-    # Define allowable ranges
-    Aspect_Ratio_range = (1.3, 4.0)
-    Elongation_range = (1.0, 2.3)
-    abs_q_min_range = (1.05, 2.95)
-    PPF_range = (1.5, 4.0)
-    li_range = (0.5, 1.3)
-
     # Check each parameter for MLP NN
     MLP_params = Matrix{Any}(undef, 6, 5)
-    MLP_params[1,:] .= check_parameter("R₀/a₀", Aspect_Ratio, Aspect_Ratio_range; model_name="MLP")
-    MLP_params[2,:] .= check_parameter("Elongation", Elongation, Elongation_range; model_name="MLP")
-    MLP_params[3,:] .= check_parameter("|q|_min", abs_q_min, abs_q_min_range; model_name="MLP")
-    MLP_params[4,:] .= check_parameter("PPF", PPF, PPF_range; model_name="MLP")
-    MLP_params[5,:] .= check_parameter("li", li, li_range; model_name="MLP")
-    MLP_params[6,:] .= check_parameter_positivity("Triangularity", Triangularity; model_name="MLP")
+    MLP_params[1,:] .= check_parameter("R₀/a₀", Aspect_Ratio, (1.3, 4.0);  model_name="MLP")
+    MLP_params[2,:] .= check_parameter("Elongation", Elongation, (1.0, 2.3); model_name="MLP")
+    MLP_params[3,:] .= check_parameter("|q|_min", abs_q_min, (1.05, 2.95); model_name="MLP")
+    MLP_params[4,:] .= check_parameter("PPF", PPF, (1.5, 4.0);  model_name="MLP")
+    MLP_params[5,:] .= check_parameter("li", li, (0.5, 1.3);  model_name="MLP")
+    MLP_params[6,:] .= check_parameter_positivity("Triangularity", Triangularity;  model_name="MLP")
 
     if verbose
         print_verbose_param_output(MLP_params; model_name="MLP")
@@ -375,12 +306,12 @@ function Check_validity_of_NN_for_given_input(CNN::CNN_Model, eqt::IMAS.equilibr
     # Check each parameter for CNN NN
     # CNN case (HL-2M tokamak: R0=178 cm, a0=65cm, R0/a0~2.74)
     CNN_params = Matrix{Any}(undef, 6, 5)
-    CNN_params[1,:] .= check_parameter("R₀/a₀", Aspect_Ratio, (2.7, 2.8); model_name="CNN")
-    CNN_params[2,:] .= check_parameter("Elongation", Elongation, (1.0, 1.833); model_name="CNN")
-    CNN_params[3,:] .= check_parameter("Triangularity", Triangularity, (-0.6, 0.8); model_name="CNN")
-    CNN_params[4,:] .= check_parameter("q_0", abs(eqt.global_quantities.q_axis), (1.155, 2.367); model_name="CNN")
-    CNN_params[5,:] .= check_parameter("q_95", abs(eqt.global_quantities.q_95), (3.94, 8.207); model_name="CNN")
-    CNN_params[6,:] .= check_parameter("q_min", abs_q_min, (1.146, 2.131); model_name="CNN")
+    CNN_params[1,:] .= check_parameter("R₀/a₀", Aspect_Ratio, (2.7, 2.8);  kwargs..., model_name="CNN")
+    CNN_params[2,:] .= check_parameter("Elongation", Elongation, (1.0, 1.833);  kwargs..., model_name="CNN")
+    CNN_params[3,:] .= check_parameter("Triangularity", Triangularity, (-0.6, 0.8);  kwargs..., model_name="CNN")
+    CNN_params[4,:] .= check_parameter("q_0", abs(eqt.global_quantities.q_axis), (1.155, 2.367);  kwargs..., model_name="CNN")
+    CNN_params[5,:] .= check_parameter("q_95", abs(eqt.global_quantities.q_95), (3.94, 8.207);  kwargs..., model_name="CNN")
+    CNN_params[6,:] .= check_parameter("q_min", abs_q_min, (1.146, 2.131);  kwargs..., model_name="CNN")
 
     if verbose
         print_verbose_param_output(CNN_params; model_name="CNN")
@@ -388,19 +319,26 @@ function Check_validity_of_NN_for_given_input(CNN::CNN_Model, eqt::IMAS.equilibr
 end
 
 # Helper function to check parameter validity
-function check_parameter(name::String, value::Float64, range::Tuple{Float64, Float64}; model_name::String="")
+function check_parameter(name::String, value::Float64, range::Tuple{Float64, Float64}; kwargs...)
+    verbose = get(kwargs, :verbose, false)
+    model_name = get(kwargs, :model_name, "")
+
     lower, upper = range
     range_width = upper - lower
     pos_percentage = (value - lower) / range_width * 100
 
     if value < lower || value > upper
-        @warn("($(model_name)): $name ($value) is outside the allowable range [$lower ~ $upper]")
+        if (~verbose)
+            @warn("($(model_name)): $name "* @sprintf("(%.3f)",value)* " is outside the limit [$lower ~ $upper]")
+        end
         status = "Out of Range"
     else
         lower_edge = lower + 0.05 * range_width
         upper_edge = upper - 0.05 * range_width
         if value < lower_edge || value>upper_edge
-            @info("($model_name): $name ($value) is near the boundary of the allowable range [$lower ~ $upper]")
+            if (~verbose)
+                @info("$model_name: $name "* @sprintf("(%.3f)",value)* " is too close to the limit [$lower, $upper]")
+            end
             status = "Marginal"
         else
             status = "Okay"
@@ -409,35 +347,43 @@ function check_parameter(name::String, value::Float64, range::Tuple{Float64, Flo
     return (name, value, @sprintf("[%.2f ~ %.2f]",range[1], range[2]), @sprintf("%.f %%", pos_percentage), status)
 end
 
-function check_parameter_positivity(name::String, value::Float64; model_name::String="")
+function check_parameter_positivity(name::String, value::Float64;  kwargs...)
+    verbose = get(kwargs, :verbose, false)
+    model_name = get(kwargs, :model_name, "")
+
     if value>=0
         status = "Okay"
     else
-        @warn("($model_name): $name ($value) is negative. Out of trained range")
+        if (~verbose)
+            @warn("($model_name): $name "* @sprintf("(%.3f)",value)* " is negative. Out of trained range")
+        end
         status = "Out of Range"
     end
     return (name, value,"positive (≥0)", "", status)
 end
 
 function print_verbose_param_output(data; model_name::String="")
-    blue_bold = Crayon(foreground=:blue, bold=true)
-    white_bold = Crayon(foreground=:white, bold=true)
-    println(blue_bold("\n$(model_name):"),white_bold(" validity of equilibrium parameters"))
     header = ["param.", "value", "allowable range", "rel. pos", "status"];
 
-    hl1 = Highlighter( (data, i, j) -> (j in (1,2,5)) && (data[i, end]=="Out of Range"), crayon"red bold");
-    hl2 = Highlighter( (data, i, j) -> (j in (1,2,5)) && (data[i, end]=="Marginal"), crayon"yellow bold");
+    hl1 = Highlighter( (data, i, j) -> (j in (1,2,4,5)) && (data[i, end]=="Out of Range"), crayon"red bold");
+    hl2 = Highlighter( (data, i, j) -> (j in (1,2,4,5)) && (data[i, end]=="Marginal"), crayon"yellow bold");
     hl3 = Highlighter( (data, i, j) -> (j==5) && (data[i, end]=="Okay"), crayon"green");
+
+    magenta_bold = Crayon(foreground=:magenta, bold=true)
+
+    str_model_name = magenta_bold("[$model_name model]")
     pretty_table(
         data;
         formatters    = ft_printf("%5.2f", 2:4),
         header        = header,
         header_crayon = crayon"white bold",
         highlighters  = (hl1,hl2,hl3),
-        tf            = tf_unicode_rounded
+        tf            = tf_unicode_rounded,
+        title = "\n$(str_model_name)\n validity of equilibrium parameters",
+        title_alignment=:c,
+        title_same_width_as_table=true
     )
 end
-
 
 
 function _calculate_MLP_neurons(TD::Troyon_Data, eqt::IMAS.equilibrium__time_slice)

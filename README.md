@@ -92,7 +92,7 @@ Yueqiang Liu (General Atomics) liuy@fusion.gat.com
 
 
 
-## ACKNOWLEDGMENTS
+## Acknowledgments
 We acknowledge Yeifei Zhao (Dalian University of Technology; <zhaoyifei@swip.ac.cn>) for graciously providing the trained CNN models for this project.
 
 ## References
