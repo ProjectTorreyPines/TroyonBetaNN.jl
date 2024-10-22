@@ -3,7 +3,23 @@ uuid = "c0158764-c6e1-428b-a545-31826f389bc8"
 authors = ["Min-Gu Yoo <mgyoo86@gmail.com>"]
 version = "1.0.0-DEV"
 
+[deps]
+BSplineKit = "093aae92-e908-43d7-9660-e50ee39d5a0a"
+IMAS = "13ead8c1-b7d1-41bb-a6d0-5b8b65ed587a"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+ONNXRunTime = "e034b28e-924e-41b2-b98f-d2bbeb830c6a"
+Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+PrettyTables = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+
 [compat]
+BSplineKit = "0.17.6"
+IMAS = "1.13.0"
+JSON = "0.21.4"
+ONNXRunTime = "1.2.0"
+Plots = "1.40.8"
+PrettyTables = "2.4.0"
+Printf = "1.11.0"
 julia = "1.11.1"
 
 [extras]
