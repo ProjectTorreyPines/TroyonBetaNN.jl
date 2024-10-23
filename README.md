@@ -38,6 +38,7 @@ Developed and trained by Yifei Zhao, *et al.*. (see [[Y.F. Zhao, *et al.*, *PPCF
 
 
 ## Quick Examples
+### 1. Basic usage (with simple output)
 ```julia
 # Assuming that "FUSE" and "dd" are already in your scope
 
@@ -58,6 +59,8 @@ The above functions show a simple terminal output about Troyon $\beta_N$ limits.
     <img src="assets/simple_terminal_output.png" width=70%>
 </div>
 <br />
+
+### 2. Basic usage (with verbose output)
 
 One can get more verbose information by adding a keyword argument "verbose=true".
 ```julia
@@ -83,6 +86,33 @@ Sample points for a DIII-D equilibrium:
 </div>
 <br />
 
+### 3. Advanced usage (reuse NN models)
+We can load the NN models once, and reuse it for any equilibrium time slices as desired.
+Note that the following TD (TroyonData) instance has every input/output information inside.
+```julia
+# Loads NN Models and stores them inside TD (TroyonData)
+TD = TBNN.Load_predefined_Troyon_NN_Models();
+
+# Pass TD as an argument to TBNN functions
+# This is a more performant way than the previous basic usage
+for eqt in dd.equilibrium.time_slice
+    TBNN.Calculate_Troyon_beta_limits_for_a_given_time_slice(TD, eqt; silence=true);
+
+    # You can get any information from TD (TroyonData),
+    # and post-process it as desired like the following
+    println("For n=1 mode:")
+    println("  MLP's βₙ_limit = $(TD.MLPs[1].βₙ_limit)")
+    println("  CNN's βₙ_limit = $(TD.CNN.βₙ_limit)")
+
+    # or like the following
+    MLPs_toroidal_modes = getfield.(TD.MLPs, :n); # return 3-element Vector{Int64}
+    MLPs_betaN_limits = getfield.(TD.MLPs, :βₙ_limit); # return 3-element Vector{Float64}
+    println("For toroidal modes: $(MLPs_toroidal_modes)")
+    println("MLP's betaN limits: $(MLPs_betaN_limits)")
+end
+
+
+```
 
 
 <!-- CONTACT -->
