@@ -147,13 +147,15 @@ function Calculate_Troyon_beta_limits_for_a_given_time_slice(TD::Troyon_Data, eq
     CNN_output = TD.CNN.model(TD.CNN.input)["tf.math.multiply"];
     TD.CNN.βₙ_limit = Float64.(vec(CNN_output)[1]);
 
+    silence = get(kwargs, :silence, false)
+    if(~silence)
+        equilibrium_βₙ = eqt.global_quantities.beta_normal
+        _print_results_to_stdout(TD; eq_betaN=equilibrium_βₙ ,kwargs...)
 
-    equilibrium_βₙ = eqt.global_quantities.beta_normal
-    _print_results_to_stdout(TD; eq_betaN=equilibrium_βₙ ,kwargs...)
-
-    verbose = get(kwargs, :verbose, false)
-    if verbose
-        plot_sample_points(TD, eqt; file_type="png")
+        verbose = get(kwargs, :verbose, false)
+        if verbose
+            plot_sample_points(TD, eqt; file_type="png")
+        end
     end
 end
 
