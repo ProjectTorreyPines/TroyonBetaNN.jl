@@ -96,6 +96,7 @@ Yueqiang Liu (General Atomics) liuy@fusion.gat.com
 We acknowledge Yeifei Zhao (Dalian University of Technology; <zhaoyifei@swip.ac.cn>) for graciously providing the trained CNN models for this project.
 
 ## References
+Please refer to NOTICE.md for citations, if this package contributes to an academic publication.
 
 * **[MLP model]**\
  Yueqiang Liu, Lang Lao, Li Li, and A D Turnbull, *Plasma Phys. Control. Fusion* **62** (2020) 045001 \
