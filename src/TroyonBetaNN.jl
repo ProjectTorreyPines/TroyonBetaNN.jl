@@ -119,6 +119,10 @@ end
 function Calculate_Troyon_beta_limits_for_a_given_time_slice(TD::Troyon_Data, eqt::IMAS.equilibrium__time_slice; kwargs...)
     if isnan(eqt.global_quantities.vacuum_toroidal_field.b0)
         @warn("Given time_slice has no equilirbium information\nSkipping Troyon βₙ calculations ...\n");
+
+        # reset NN models' betaN value to NaN
+        setfield!.(TD.MLPs,:βₙ_limit,NaN)
+        TD.CNN.βₙ_limit=NaN
         return
     end
 
