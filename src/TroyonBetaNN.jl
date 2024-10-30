@@ -108,6 +108,8 @@ function Calculate_Troyon_beta_limits_for_IMAS_dd(TD_vec::Vector{Troyon_Data}, d
             Calculate_Troyon_beta_limits_for_a_given_time_slice(TD_vec[tid], this_eqt; kwargs...)
         end
     end
+
+    return TD_vec
 end
 
 function Calculate_Troyon_beta_limits_for_a_given_time_slice(eqt::IMAS.equilibrium__time_slice; kwargs...)
@@ -161,6 +163,8 @@ function Calculate_Troyon_beta_limits_for_a_given_time_slice(TD::Troyon_Data, eq
             plot_sample_points(TD, eqt; file_type="png")
         end
     end
+
+    return TD
 end
 
 function _print_results_to_stdout(TD; kwargs...)
