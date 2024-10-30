@@ -17,7 +17,7 @@ export Troyon_Data, Load_predefined_Troyon_NN_Models
     W::Matrix{Float64} # map from input to hidden layer
     V::Vector{Float64} # map from hidden layer to output
     βₙ_limit::Float64=NaN # scalar output
-    input_file::String=""
+    fileName::String=""
 end
 
 @kwdef mutable struct CNN_Model
@@ -25,7 +25,7 @@ end
     model::ORT.InferenceSession
     input::Dict=Dict()
     βₙ_limit::Float64=NaN # scalar output
-    input_file::String=""
+    fileName::String=""
 end
 
 @kwdef mutable struct Sample_Points
@@ -61,7 +61,7 @@ function Load_predefined_Troyon_NN_Models(MLP_file::String =joinpath(@__DIR__, "
     end
 
     # Read CNN file
-    CNN = CNN_Model(model= ORT.load_inference(CNN_file));
+    CNN = CNN_Model(model= ORT.load_inference(CNN_file), fileName=CNN_file);
 
     return Troyon_Data(Sample_Points(), MLPs, CNN)
 end
