@@ -415,25 +415,47 @@ end
 
 function _set_CNN_input_neurons_from_sampled_points(TD::Troyon_Data, eqt::IMAS.equilibrium__time_slice)
 
-    Xb = _convert_RZ_samples_into_19_normalized_neurons(TD, eqt)
-    Xp = TD.sampPoints.pressure[2:end] / TD.sampPoints.pressure[1]
-    Xq = TD.sampPoints.q
+    if (basename(TD.CNN.filePath) == "CNN_Model.onnx")
+        Xb = _convert_RZ_samples_into_19_normalized_neurons(TD, eqt)
+        Xp = TD.sampPoints.pressure[2:end] / TD.sampPoints.pressure[1]
+        Xq = TD.sampPoints.q
 
-    input_1 = Float32.(reshape(Xb, 1, 19, 1)) # Boundary input
-    input_2 = Float32.(reshape(Xp, 1, 11, 1)) # Pressure
-    input_3 = Float32.(reshape(Xq, 1, 12, 1)) # Safety factor
+        input_1 = Float32.(reshape(Xb, 1, 19, 1)) # Boundary input
+        input_2 = Float32.(reshape(Xp, 1, 11, 1)) # Pressure
+        input_3 = Float32.(reshape(Xq, 1, 12, 1)) # Safety factor
 
-    input_4 = Float32.(reshape([eqt.global_quantities.li_3], 1, 1)) # internal inductance
+        input_4 = Float32.(reshape([eqt.global_quantities.li_3], 1, 1)) # internal inductance
 
-    # Calculate PPF (Pressure Peaking Factor)
-    PPF = eqt.profiles_1d.pressure[1] / Take_1D_average_over_volume(eqt, eqt.profiles_1d.pressure)
-    input_5 = Float32.(reshape([PPF], 1, 1))
+        # Calculate PPF (Pressure Peaking Factor)
+        PPF = eqt.profiles_1d.pressure[1] / Take_1D_average_over_volume(eqt, eqt.profiles_1d.pressure)
+        input_5 = Float32.(reshape([PPF], 1, 1))
+
+        #  TODO: check what exactly input_4 and input_5 are
+        # Here, we assume that input_4 is "PPF" and input_5 is "li", which looks more reasonable
+        # Swap input_4 and input_5
+        # input_4, input_5 = input_5, input_4
+    elseif (basename(TD.CNN.filePath) == "CNN_Model_new.onnx")
+        println("using new CNN model")
+        Xb = _convert_RZ_samples_into_19_normalized_neurons(TD, eqt)
+        Xp = TD.sampPoints.pressure[2:end] / TD.sampPoints.pressure[1]
+        Xq = TD.sampPoints.q
+
+        input_1 = Float32.(reshape(Xb, 1, 19, 1)) # Boundary input
+        input_2 = Float32.(reshape(Xq, 1, 12, 1)) # Safety factor
+        input_3 = Float32.(reshape(Xp, 1, 11, 1)) # Pressure
+
+        input_4 = Float32.(reshape([eqt.global_quantities.li_3], 1, 1)) # internal inductance
+
+        # Calculate PPF (Pressure Peaking Factor)
+        PPF = eqt.profiles_1d.pressure[1] / Take_1D_average_over_volume(eqt, eqt.profiles_1d.pressure)
+        input_5 = Float32.(reshape([PPF], 1, 1))
 
 
-    #  TODO: check what exactly input_4 and input_5 are
-    # Here, we assume that input_4 is "PPF" and input_5 is "li", which looks more reasonable
-    # Swap input_4 and input_5
-    input_4, input_5 = input_5, input_4
+        #  TODO: check what exactly input_4 and input_5 are
+        # Here, we assume that input_4 is "PPF" and input_5 is "li", which looks more reasonable
+        # Swap input_4 and input_5
+        # input_4, input_5 = input_5, input_4
+    end
 
     return TD.CNN.input = Dict("input_1" => input_1, "input_2" => input_2, "input_3" => input_3, "input_4" => input_4, "input_5" => input_5)
 end
