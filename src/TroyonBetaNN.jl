@@ -68,26 +68,6 @@ function Load_predefined_Troyon_NN_Models(; MLP_fileName::String="MLP_Model.json
     return Troyon_Data(Sample_Points(), MLPs, CNN)
 end
 
-
-function Load_predefined_Troyon_MLP_Model(file_path::String=joinpath(@__DIR__, "../data/MLP_Model.json"))
-    data_from_file = JSON.parsefile(file_path)
-
-    target_n_modes = [1, 2, 3]
-
-    MLPs = Vector{MLP_Model}(undef, 3)
-    for n in target_n_modes
-        w_data = data_from_file[n]["W"]
-        w_data = Float64.(hcat(w_data...)')
-
-        v_data = Float64.(data_from_file[n]["V"])
-
-        # Create MLP instance
-        MLPs[n] = MLP_Model(n, w_data, v_data, NaN, file_path)
-    end
-
-    return Troyon_Data(Sample_Points(), MLPs)
-end
-
 function Calculate_Troyon_beta_limits_for_IMAS_dd(dd::IMAS.dd; kwargs...)
     Neqt = length(dd.equilibrium.time_slice)
     TD_vec = [Load_predefined_Troyon_NN_Models() for _ in 1:Neqt]
