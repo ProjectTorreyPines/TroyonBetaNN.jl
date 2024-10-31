@@ -43,9 +43,10 @@ end
 end
 
 
-function Load_predefined_Troyon_NN_Models(MLP_file::String=joinpath(@__DIR__, "../data/MLP_Model.json"), CNN_file::String=joinpath(@__DIR__, "../data/CNN_Model.onnx"))
+function Load_predefined_Troyon_NN_Models(; MLP_fileName::String="MLP_Model.json", CNN_fileName::String="CNN_Model.onnx")
     # Read MLP file
-    data_from_file = JSON.parsefile(MLP_file)
+    MLP_file_path = joinpath(@__DIR__, "../data/", MLP_fileName)
+    data_from_file = JSON.parsefile(MLP_file_path)
 
     target_n_modes = [1, 2, 3]
 
@@ -57,11 +58,12 @@ function Load_predefined_Troyon_NN_Models(MLP_file::String=joinpath(@__DIR__, ".
         v_data = Float64.(data_from_file[n]["V"])
 
         # Create MLP instance
-        MLPs[n] = MLP_Model(n, w_data, v_data, NaN, MLP_file)
+        MLPs[n] = MLP_Model(n, w_data, v_data, NaN, MLP_file_path)
     end
 
     # Read CNN file
-    CNN = CNN_Model(; model=ORT.load_inference(CNN_file), filePath=CNN_file)
+    CNN_file_path = joinpath(@__DIR__, "../data/", CNN_fileName)
+    CNN = CNN_Model(; model=ORT.load_inference(CNN_file_path), filePath=CNN_file_path)
 
     return Troyon_Data(Sample_Points(), MLPs, CNN)
 end
