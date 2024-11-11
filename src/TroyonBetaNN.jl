@@ -10,7 +10,7 @@ using PrettyTables
 
 import ONNXRunTime as ORT
 
-export Troyon_Data, Load_predefined_Troyon_NN_Models
+export Troyon_Data, load_predefined_Troyon_NN_Models
 
 @kwdef mutable struct MLP_Model
     n::Int # toroidal mode number
@@ -43,7 +43,7 @@ end
 end
 
 
-function Load_predefined_Troyon_NN_Models(; MLP_fileName::String="MLP_Model.json", CNN_fileName::String="CNN_Model.onnx")
+function load_predefined_Troyon_NN_Models(; MLP_fileName::String="MLP_Model.json", CNN_fileName::String="CNN_Model.onnx")
     # Read MLP file
     MLP_file_path = joinpath(@__DIR__, "../data/", MLP_fileName)
     data_from_file = JSON.parsefile(MLP_file_path)
@@ -68,15 +68,15 @@ function Load_predefined_Troyon_NN_Models(; MLP_fileName::String="MLP_Model.json
     return Troyon_Data(Sample_Points(), MLPs, CNN)
 end
 
-function Calculate_Troyon_beta_limits_for_IMAS_dd(dd::IMAS.dd; kwargs...)
+function calculate_Troyon_beta_limits_for_IMAS_dd(dd::IMAS.dd; kwargs...)
     Neqt = length(dd.equilibrium.time_slice)
-    TD_vec = [Load_predefined_Troyon_NN_Models() for _ in 1:Neqt]
+    TD_vec = [load_predefined_Troyon_NN_Models() for _ in 1:Neqt]
 
-    Calculate_Troyon_beta_limits_for_IMAS_dd(TD_vec, dd; kwargs...)
+    calculate_Troyon_beta_limits_for_IMAS_dd(TD_vec, dd; kwargs...)
     return TD_vec
 end
 
-function Calculate_Troyon_beta_limits_for_IMAS_dd(TD_vec::Vector{Troyon_Data}, dd::IMAS.dd; kwargs...)
+function calculate_Troyon_beta_limits_for_IMAS_dd(TD_vec::Vector{Troyon_Data}, dd::IMAS.dd; kwargs...)
     verbose = get(kwargs, :verbose, false)
 
     yellow_bold = Crayon(; foreground=:yellow, bold=true)
@@ -87,20 +87,20 @@ function Calculate_Troyon_beta_limits_for_IMAS_dd(TD_vec::Vector{Troyon_Data}, d
             @warn(@sprintf("Equilibrium time_slice #%d has no equilirbium information\nSkipping Troyon βₙ calculations ...\n", tid))
         else
             println(yellow_bold(@sprintf("\nFor equilibrium time_slice #%d @ t=%.2g secs", tid, this_eqt.time)))
-            Calculate_Troyon_beta_limits_for_a_given_time_slice(TD_vec[tid], this_eqt; kwargs...)
+            calculate_Troyon_beta_limits_for_a_given_time_slice(TD_vec[tid], this_eqt; kwargs...)
         end
     end
 
     return TD_vec
 end
 
-function Calculate_Troyon_beta_limits_for_a_given_time_slice(eqt::IMAS.equilibrium__time_slice; kwargs...)
-    TD = Load_predefined_Troyon_NN_Models()
-    Calculate_Troyon_beta_limits_for_a_given_time_slice(TD, eqt; kwargs...)
+function calculate_Troyon_beta_limits_for_a_given_time_slice(eqt::IMAS.equilibrium__time_slice; kwargs...)
+    TD = load_predefined_Troyon_NN_Models()
+    calculate_Troyon_beta_limits_for_a_given_time_slice(TD, eqt; kwargs...)
     return TD
 end
 
-function Calculate_Troyon_beta_limits_for_a_given_time_slice(TD::Troyon_Data, eqt::IMAS.equilibrium__time_slice; kwargs...)
+function calculate_Troyon_beta_limits_for_a_given_time_slice(TD::Troyon_Data, eqt::IMAS.equilibrium__time_slice; kwargs...)
     if isnan(eqt.global_quantities.vacuum_toroidal_field.b0)
         @warn("Given time_slice has no equilirbium information\nSkipping Troyon βₙ calculations ...\n")
 
@@ -111,9 +111,9 @@ function Calculate_Troyon_beta_limits_for_a_given_time_slice(TD::Troyon_Data, eq
     end
 
 
-    Check_validity_of_NN_for_given_input(TD, eqt; kwargs...)
+    check_validity_of_NN_for_given_input(TD, eqt; kwargs...)
 
-    Sample_points_from_equilibrium(TD, eqt)
+    sample_points_from_equilibrium(TD, eqt)
 
     # First, MLP model
     # Calculate 42 neurons from sample Points on equilibrium
@@ -247,12 +247,12 @@ function _print_results_to_stdout(CNN::CNN_Model; kwargs...)
     end
 end
 
-function Check_validity_of_NN_for_given_input(TD::Troyon_Data, eqt::IMAS.equilibrium__time_slice; kwargs...)
-    Check_validity_of_NN_for_given_input(TD.MLPs, eqt; kwargs...)
-    return Check_validity_of_NN_for_given_input(TD.CNN, eqt; kwargs...)
+function check_validity_of_NN_for_given_input(TD::Troyon_Data, eqt::IMAS.equilibrium__time_slice; kwargs...)
+    check_validity_of_NN_for_given_input(TD.MLPs, eqt; kwargs...)
+    return check_validity_of_NN_for_given_input(TD.CNN, eqt; kwargs...)
 end
 
-function Check_validity_of_NN_for_given_input(MLPs::Vector{MLP_Model}, eqt::IMAS.equilibrium__time_slice; kwargs...)
+function check_validity_of_NN_for_given_input(MLPs::Vector{MLP_Model}, eqt::IMAS.equilibrium__time_slice; kwargs...)
     verbose = get(kwargs, :verbose, false)
 
     # Calculate relevant physical parameters
@@ -262,7 +262,7 @@ function Check_validity_of_NN_for_given_input(MLPs::Vector{MLP_Model}, eqt::IMAS
     abs_q_min = minimum(abs.(eqt.profiles_1d.q))
 
     # Calculate PPF (Pressure Peaking Factor)
-    PPF = eqt.profiles_1d.pressure[1] / Take_1D_average_over_volume(eqt, eqt.profiles_1d.pressure)
+    PPF = eqt.profiles_1d.pressure[1] / take_1D_average_over_volume(eqt, eqt.profiles_1d.pressure)
 
     # Internal inductance
     li = eqt.global_quantities.li_3
@@ -282,7 +282,7 @@ function Check_validity_of_NN_for_given_input(MLPs::Vector{MLP_Model}, eqt::IMAS
 end
 
 
-function Check_validity_of_NN_for_given_input(CNN::CNN_Model, eqt::IMAS.equilibrium__time_slice; kwargs...)
+function check_validity_of_NN_for_given_input(CNN::CNN_Model, eqt::IMAS.equilibrium__time_slice; kwargs...)
     verbose = get(kwargs, :verbose, false)
 
     # Calculate relevant physical parameters
@@ -292,7 +292,7 @@ function Check_validity_of_NN_for_given_input(CNN::CNN_Model, eqt::IMAS.equilibr
     abs_q_min = minimum(abs.(eqt.profiles_1d.q))
 
     # Calculate PPF (Pressure Peaking Factor)
-    PPF = eqt.profiles_1d.pressure[1] / Take_1D_average_over_volume(eqt, eqt.profiles_1d.pressure)
+    PPF = eqt.profiles_1d.pressure[1] / take_1D_average_over_volume(eqt, eqt.profiles_1d.pressure)
 
     # Internal inductance
     li = eqt.global_quantities.li_3
@@ -383,7 +383,7 @@ end
 function _calculate_MLP_neurons(TD::Troyon_Data, eqt::IMAS.equilibrium__time_slice)
 
     if (isempty(TD.sampPoints.R) || isempty(TD.sampPoints.q))
-        Sample_points_from_equilibrium(TD, eqt)
+        sample_points_from_equilibrium(TD, eqt)
     end
 
     # 19 neurons from RZ boundary points
@@ -426,15 +426,15 @@ function _set_CNN_input_neurons_from_sampled_points(TD::Troyon_Data, eqt::IMAS.e
     input_4 = Float32.(reshape([eqt.global_quantities.li_3], 1, 1)) # internal inductance
 
     # Calculate PPF (Pressure Peaking Factor)
-    PPF = eqt.profiles_1d.pressure[1] / Take_1D_average_over_volume(eqt, eqt.profiles_1d.pressure)
+    PPF = eqt.profiles_1d.pressure[1] / take_1D_average_over_volume(eqt, eqt.profiles_1d.pressure)
     input_5 = Float32.(reshape([PPF], 1, 1))
 
     return TD.CNN.input = Dict("input_1" => input_1, "input_2" => input_2, "input_3" => input_3, "input_4" => input_4, "input_5" => input_5)
 end
 
-function Sample_points_from_equilibrium(TD::Troyon_Data, eqt::IMAS.equilibrium__time_slice)
+function sample_points_from_equilibrium(TD::Troyon_Data, eqt::IMAS.equilibrium__time_slice)
     # 18 sample RZ points on a boundary
-    TD.sampPoints.R, TD.sampPoints.Z = Sample_RZ_points_on_a_boundary(eqt)
+    TD.sampPoints.R, TD.sampPoints.Z = sample_RZ_points_on_a_boundary(eqt)
 
     # Construct interpolators for 1D q and norm_pressure profiles
     # 12 sample points representing safety factor profile
@@ -446,7 +446,7 @@ function Sample_points_from_equilibrium(TD::Troyon_Data, eqt::IMAS.equilibrium__
     return TD.sampPoints.pressure = itp_p.(TD.sampPoints.ψₙ)
 end
 
-function Sample_RZ_points_on_a_boundary(eqt::IMAS.equilibrium__time_slice)
+function sample_RZ_points_on_a_boundary(eqt::IMAS.equilibrium__time_slice)
 
     R0 = eqt.boundary.geometric_axis.r
     Z0 = eqt.boundary.geometric_axis.z
@@ -497,7 +497,7 @@ end
 
 
 
-function Take_1D_average_over_volume(eqt::IMAS.equilibrium__time_slice, target_1D_variable::Vector)
+function take_1D_average_over_volume(eqt::IMAS.equilibrium__time_slice, target_1D_variable::Vector)
     # Check the length of given target_1D_variable
     if length(target_1D_variable) != length(eqt.profiles_1d.volume)
         @printf("Error: Length of target_1D_variable (%d) does not match length of eqt.profiles_1d.volume (%d).\n",
@@ -521,7 +521,7 @@ end
 
 function plot_sample_points(TD::Troyon_Data, eqt::IMAS.equilibrium__time_slice; fileName_prefix::String="Troyon_Sample_Points", file_type::String="png", title_prefix="")
     if (isempty(TD.sampPoints.R) || isempty(TD.sampPoints.q))
-        Sample_points_from_equilibrium(TD, eqt)
+        sample_points_from_equilibrium(TD, eqt)
     end
 
     # 1D plot

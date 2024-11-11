@@ -46,12 +46,12 @@ import TroyonBetaNN as TBNN
 
 # The following function cacluates Troyon limits for all equilibrium time_slices in dd,
 # and returns Vector{Troyon_Data}, which has all information about the result
-TD_vec = TBNN.Calculate_Troyon_beta_limits_for_IMAS_dd(dd); # To iterate
+TD_vec = TBNN.calculate_Troyon_beta_limits_for_IMAS_dd(dd); # To iterate
 
 # Or one can specify a time_slice of equilibrium and calculate Troyon limits for it,
 # which returns a single "Troyon_Data" struct
 eqt = dd.equilibrium.time_slice[2];
-TD = TBNN.Calculate_Troyon_beta_limits_for_a_given_time_slice(eqt);
+TD = TBNN.calculate_Troyon_beta_limits_for_a_given_time_slice(eqt);
 ```
 The above functions show a simple terminal output about Troyon $\beta_N$ limits.
 <br />
@@ -65,11 +65,11 @@ The above functions show a simple terminal output about Troyon $\beta_N$ limits.
 One can get more verbose information by adding a keyword argument "verbose=true".
 ```julia
 # For all time_slices
-TD_vec = TBNN.Calculate_Troyon_beta_limits_for_IMAS_dd(dd; verbose=true);
+TD_vec = TBNN.calculate_Troyon_beta_limits_for_IMAS_dd(dd; verbose=true);
 
 # Or, for a specific time_slice
 eqt = dd.equilibrium.time_slice[2];
-TD = TBNN.Calculate_Troyon_beta_limits_for_a_given_time_slice(eqt; verbose=true);
+TD = TBNN.calculate_Troyon_beta_limits_for_a_given_time_slice(eqt; verbose=true);
 ```
 This will give the following verbose terminal output and write figure file of sampling points used for NN.
 <br />
@@ -91,12 +91,12 @@ We can load the NN models once, and reuse it for any equilibrium time slices as 
 Note that the following TD (TroyonData) instance has every input/output information inside.
 ```julia
 # Loads NN Models and stores them inside TD (TroyonData)
-TD = TBNN.Load_predefined_Troyon_NN_Models();
+TD = TBNN.load_predefined_Troyon_NN_Models();
 
 # Pass TD as an argument to TBNN functions
 # This is a more performant way than the previous basic usage
 for eqt in dd.equilibrium.time_slice
-    TBNN.Calculate_Troyon_beta_limits_for_a_given_time_slice(TD, eqt; silence=true);
+    TBNN.calculate_Troyon_beta_limits_for_a_given_time_slice(TD, eqt; silence=true);
 
     # You can get any information from TD (TroyonData),
     # and post-process it as desired like the following
