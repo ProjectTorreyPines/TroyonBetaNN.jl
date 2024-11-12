@@ -9,10 +9,10 @@ using IMAS
     dd = IMAS.json2imas(file_path);
 
     # run & show simple terminal output
-    TD_vec = TBNN.Calculate_Troyon_beta_limits_for_IMAS_dd(dd);
+    TD_vec = TBNN.calculate_Troyon_beta_limits_for_IMAS_dd(dd);
 
     # run & show verbose terminal output
-    TD_vec = TBNN.Calculate_Troyon_beta_limits_for_IMAS_dd(dd; verbose=true);
+    TD_vec = TBNN.calculate_Troyon_beta_limits_for_IMAS_dd(dd; verbose=true);
 
     TD=TD_vec[2]
     @testset "Check MLP's βₙ_limits with references" begin
