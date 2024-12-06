@@ -1,7 +1,7 @@
 name = "TroyonBetaNN"
 uuid = "c0158764-c6e1-428b-a545-31826f389bc8"
 authors = ["Min-Gu Yoo <mgyoo86@gmail.com>"]
-version = "1.0.0-DEV"
+version = "1.0.0"
 
 [deps]
 BSplineKit = "093aae92-e908-43d7-9660-e50ee39d5a0a"
