@@ -1,6 +1,6 @@
 function load_predefined_Troyon_NN_Models(; MLP_fileName::String="MLP_Model.json", CNN_fileName::String="CNN_Model.onnx")
     # Read MLP file
-    MLP_file_path = joinpath(@__DIR__, "../data/", MLP_fileName)
+    MLP_file_path = joinpath(@__DIR__, "..", "data", MLP_fileName)
     data_from_file = JSON.parsefile(MLP_file_path)
 
     target_n_modes = [1, 2, 3]
@@ -17,7 +17,7 @@ function load_predefined_Troyon_NN_Models(; MLP_fileName::String="MLP_Model.json
     end
 
     # Read CNN file
-    CNN_file_path = joinpath(@__DIR__, "../data/", CNN_fileName)
+    CNN_file_path = joinpath(@__DIR__, "..", "data", CNN_fileName)
     CNN = CNN_Model(; model=ORT.load_inference(CNN_file_path), filePath=CNN_file_path)
 
     return Troyon_Data(Sample_Points(), MLPs, CNN)
@@ -39,9 +39,11 @@ function calculate_Troyon_beta_limits_for_IMAS_dd(TD_vec::Vector{Troyon_Data}, d
         this_eqt = dd.equilibrium.time_slice[tid]
 
         if isnan(this_eqt.global_quantities.vacuum_toroidal_field.b0)
-            @warn(@sprintf("Equilibrium time_slice #%d has no equilirbium information\nSkipping Troyon βₙ calculations ...\n", tid))
+            @warn(@sprintf("Equilibrium time_slice #%d has no equilibrium information\nSkipping Troyon βₙ calculations ...\n", tid))
         else
-            println(yellow_bold(@sprintf("\nFor equilibrium time_slice #%d @ t=%.2g secs", tid, this_eqt.time)))
+            if verbose
+                println(yellow_bold(@sprintf("\nFor equilibrium time_slice #%d @ t=%.2g secs", tid, this_eqt.time)))
+            end
             calculate_Troyon_beta_limits_for_a_given_time_slice(TD_vec[tid], this_eqt; kwargs...)
         end
     end
@@ -56,15 +58,17 @@ function calculate_Troyon_beta_limits_for_a_given_time_slice(eqt::IMAS.equilibri
 end
 
 function calculate_Troyon_beta_limits_for_a_given_time_slice(TD::Troyon_Data, eqt::IMAS.equilibrium__time_slice; kwargs...)
+    silence = get(kwargs, :silence, false)
+    verbose = get(kwargs, :verbose, false)
+
     if isnan(eqt.global_quantities.vacuum_toroidal_field.b0)
-        @warn("Given time_slice has no equilirbium information\nSkipping Troyon βₙ calculations ...\n")
+        @warn("Given time_slice has no equilibrium information\nSkipping Troyon βₙ calculations ...\n")
 
         # reset NN models' betaN value to NaN
         setfield!.(TD.MLPs, :βₙ_limit, NaN)
         TD.CNN.βₙ_limit = NaN
         return
     end
-
 
     check_validity_of_NN_for_given_input(TD, eqt; kwargs...)
 
@@ -90,12 +94,10 @@ function calculate_Troyon_beta_limits_for_a_given_time_slice(TD::Troyon_Data, eq
     CNN_output = TD.CNN.model(TD.CNN.input)["tf.math.multiply"]
     TD.CNN.βₙ_limit = Float64.(vec(CNN_output)[1])
 
-    silence = get(kwargs, :silence, false)
-    if (~silence)
+    if ~silence
         equilibrium_βₙ = eqt.global_quantities.beta_normal
         _print_results_to_stdout(TD; eq_betaN=equilibrium_βₙ, kwargs...)
 
-        verbose = get(kwargs, :verbose, false)
         if verbose
             plot_sample_points(TD, eqt; file_type="png")
         end
@@ -126,12 +128,12 @@ function check_validity_of_NN_for_given_input(MLPs::Vector{MLP_Model}, eqt::IMAS
 
     # Check each parameter for MLP NN
     MLP_params = Matrix{Any}(undef, 6, 5)
-    MLP_params[1, :] .= check_parameter("R₀/a₀", Aspect_Ratio, (1.3, 4.0); model_name="MLP")
-    MLP_params[2, :] .= check_parameter("Elongation", Elongation, (1.0, 2.3); model_name="MLP")
-    MLP_params[3, :] .= check_parameter("|q|_min", abs_q_min, (1.05, 2.95); model_name="MLP")
-    MLP_params[4, :] .= check_parameter("PPF", PPF, (1.5, 4.0); model_name="MLP")
-    MLP_params[5, :] .= check_parameter("li", li, (0.5, 1.3); model_name="MLP")
-    MLP_params[6, :] .= check_parameter_positivity("Triangularity", Triangularity; model_name="MLP")
+    MLP_params[1, :] .= check_parameter("R₀/a₀", Aspect_Ratio, (1.3, 4.0); kwargs..., model_name="MLP")
+    MLP_params[2, :] .= check_parameter("Elongation", Elongation, (1.0, 2.3); kwargs..., model_name="MLP")
+    MLP_params[3, :] .= check_parameter("|q|_min", abs_q_min, (1.05, 2.95); kwargs..., model_name="MLP")
+    MLP_params[4, :] .= check_parameter("PPF", PPF, (1.5, 4.0); kwargs..., model_name="MLP")
+    MLP_params[5, :] .= check_parameter("li", li, (0.5, 1.3); kwargs..., model_name="MLP")
+    MLP_params[6, :] .= check_parameter_positivity("Triangularity", Triangularity; kwargs..., model_name="MLP")
 
     if verbose
         print_verbose_param_output(MLP_params; model_name="MLP")
@@ -172,6 +174,8 @@ end
 # Helper function to check parameter validity
 function check_parameter(name::String, value::Float64, range::Tuple{Float64,Float64}; kwargs...)
     verbose = get(kwargs, :verbose, false)
+    silence = get(kwargs, :silence, false)
+
     model_name = get(kwargs, :model_name, "")
 
     lower, upper = range
@@ -179,7 +183,7 @@ function check_parameter(name::String, value::Float64, range::Tuple{Float64,Floa
     pos_percentage = (value - lower) / range_width * 100
 
     if value < lower || value > upper
-        if (~verbose)
+        if ~verbose && ~silence
             @warn("[$(model_name)]: $name " * @sprintf("(%.3f)", value) * " is outside the limit [$lower ~ $upper]")
         end
         status = "Out of Range"
@@ -187,7 +191,7 @@ function check_parameter(name::String, value::Float64, range::Tuple{Float64,Floa
         lower_edge = lower + 0.05 * range_width
         upper_edge = upper - 0.05 * range_width
         if value < lower_edge || value > upper_edge
-            if (~verbose)
+            if ~verbose && ~silence
                 @info("[$model_name]: $name " * @sprintf("(%.3f)", value) * " is too close to the limit [$lower, $upper]")
             end
             status = "Marginal"
@@ -200,12 +204,14 @@ end
 
 function check_parameter_positivity(name::String, value::Float64; kwargs...)
     verbose = get(kwargs, :verbose, false)
+    silence = get(kwargs, :silence, false)
+
     model_name = get(kwargs, :model_name, "")
 
     if value >= 0
         status = "Okay"
     else
-        if (~verbose)
+        if ~verbose && ~silence
             @warn("[$model_name]: $name " * @sprintf("(%.3f)", value) * " is negative. Out of trained range")
         end
         status = "Out of Range"
@@ -215,7 +221,6 @@ end
 
 
 function _calculate_MLP_neurons(TD::Troyon_Data, eqt::IMAS.equilibrium__time_slice)
-
     if (isempty(TD.sampPoints.R) || isempty(TD.sampPoints.q))
         sample_points_from_equilibrium(TD, eqt)
     end
@@ -248,7 +253,6 @@ function _convert_RZ_samples_into_19_normalized_neurons(TD::Troyon_Data, eqt::IM
 end
 
 function _set_CNN_input_neurons_from_sampled_points(TD::Troyon_Data, eqt::IMAS.equilibrium__time_slice)
-
     Xb = _convert_RZ_samples_into_19_normalized_neurons(TD, eqt)
     Xp = TD.sampPoints.pressure[2:end] / TD.sampPoints.pressure[1]
     Xq = TD.sampPoints.q
@@ -281,7 +285,6 @@ function sample_points_from_equilibrium(TD::Troyon_Data, eqt::IMAS.equilibrium__
 end
 
 function sample_RZ_points_on_a_boundary(eqt::IMAS.equilibrium__time_slice)
-
     R0 = eqt.boundary.geometric_axis.r
     Z0 = eqt.boundary.geometric_axis.z
 
@@ -328,8 +331,6 @@ function sample_RZ_points_on_a_boundary(eqt::IMAS.equilibrium__time_slice)
 
     return R_samp, Z_samp
 end
-
-
 
 function take_1D_average_over_volume(eqt::IMAS.equilibrium__time_slice, target_1D_variable::Vector)
     # Check the length of given target_1D_variable
