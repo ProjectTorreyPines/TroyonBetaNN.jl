@@ -16,7 +16,7 @@ Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
-BSplineKit = "0.17.6"
+BSplineKit = "0.17.6, 0.18"
 IMAS = "1.13, 2, 3"
 JSON = "0.21.4"
 ONNXRunTime = "1.2.0"
