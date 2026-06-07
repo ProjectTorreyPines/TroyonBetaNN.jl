@@ -1,10 +1,7 @@
-# TroyonBetaNN.jl
-
-[![Build Status](https://github.com/mgyoo86/TroyonBetaNN.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/mgyoo86/TroyonBetaNN.jl/actions/workflows/CI.yml?query=branch%3Amain)
-
+[![CI](https://github.com/ProjectTorreyPines/TroyonBetaNN.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/ProjectTorreyPines/TroyonBetaNN.jl/actions/workflows/CI.yml)
 
 <!-- ABOUT THE PROJECT -->
-## About the Package
+## TroyonBetaNN.jl
 This package uses pre-trained neural network (NN) models to predict Troyon (no-wall) $\beta_\mathrm{N}$ limits for a given equilibrium.
 There are two different NN models with either MLP or CNN architectures, whose training dataset were generated with the [CHEASE](https://doi.org/10.1016/0010-4655(92)90167-W) and [MARS-F](https://doi.org/10.1063/1.1287744) codes for the equilibrium and MHD stability, respectively.
 This package employs the pre-trained NN models and provides some useful interfaces to make it compatible with the IMAS data structure and [**FUSE**](https://github.com/ProjectTorreyPines/FUSE.jl) [<img src="https://i.sstatic.net/tskMh.png">](https://github.com/ProjectTorreyPines/FUSE.jl) ecosystem.
