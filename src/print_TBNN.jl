@@ -6,23 +6,22 @@ end
 function print_verbose_param_output(data; model_name::String="")
     header = ["param.", "value", "allowable range", "rel. pos", "status"]
 
-    hl1 = Highlighter((data, i, j) -> (j in (1, 2, 4, 5)) && (data[i, end] == "Out of Range"), crayon"red bold")
-    hl2 = Highlighter((data, i, j) -> (j in (1, 2, 4, 5)) && (data[i, end] == "Marginal"), crayon"yellow bold")
-    hl3 = Highlighter((data, i, j) -> (j == 5) && (data[i, end] == "Okay"), crayon"green")
+    hl1 = TextHighlighter((data, i, j) -> (j in (1, 2, 4, 5)) && (data[i, end] == "Out of Range"), crayon"red bold")
+    hl2 = TextHighlighter((data, i, j) -> (j in (1, 2, 4, 5)) && (data[i, end] == "Marginal"), crayon"yellow bold")
+    hl3 = TextHighlighter((data, i, j) -> (j == 5) && (data[i, end] == "Okay"), crayon"green")
 
     magenta_bold = Crayon(; foreground=:magenta, bold=true)
 
     str_model_name = magenta_bold("[$model_name model]")
     return pretty_table(
         data;
-        formatters=ft_printf("%5.2f", 2:4),
-        header=header,
-        header_crayon=crayon"white bold",
-        highlighters=(hl1, hl2, hl3),
-        tf=tf_unicode_rounded,
+        formatters=[fmt__printf("%5.2f", 2:4)],
+        column_labels=header,
+        highlighters=[hl1, hl2, hl3],
+        style=TextTableStyle(first_line_column_label=crayon"white bold"),
+        table_format=TextTableFormat(borders=text_table_borders__unicode_rounded),
         title="\n$(str_model_name)\n validity of equilibrium parameters",
-        title_alignment=:c,
-        title_same_width_as_table=true
+        title_alignment=:c
     )
 end
 
@@ -50,22 +49,21 @@ function _print_results_to_stdout(MLPs::Vector{MLP_Model}; kwargs...)
 
         data = hcat(getfield.(MLPs, :n), getfield.(MLPs, :βₙ_limit), MLP_stability_vec)
 
-        hl1 = Highlighter((data, i, j) -> (j in (1, 3)) && (data[i, end] == "Unstable"), crayon"red bold")
-        hl2 = Highlighter((data, i, j) -> (j in (1, 3)) && (data[i, end] == "Marginal"), crayon"yellow bold")
-        hl3 = Highlighter((data, i, j) -> (j == 3) && (data[i, end] == "Stable"), crayon"green")
+        hl1 = TextHighlighter((data, i, j) -> (j in (1, 3)) && (data[i, end] == "Unstable"), crayon"red bold")
+        hl2 = TextHighlighter((data, i, j) -> (j in (1, 3)) && (data[i, end] == "Marginal"), crayon"yellow bold")
+        hl3 = TextHighlighter((data, i, j) -> (j == 3) && (data[i, end] == "Stable"), crayon"green")
 
         model_name = magenta_bold("[MLP model]")
         str_eq_betaN = blue_bold(@sprintf("βₙ=%.2f", eq_betaN))
         pretty_table(
             data;
-            formatters=ft_printf("%5.3f", 2:4),
-            header=header,
-            header_crayon=crayon"white bold",
-            highlighters=(hl1, hl2, hl3),
-            tf=tf_unicode_rounded,
+            formatters=[fmt__printf("%5.3f", 2:4)],
+            column_labels=header,
+            highlighters=[hl1, hl2, hl3],
+            style=TextTableStyle(first_line_column_label=crayon"white bold"),
+            table_format=TextTableFormat(borders=text_table_borders__unicode_rounded),
             title="\n$model_name\n (Equilibrium $str_eq_betaN)",
-            title_alignment=:c,
-            title_same_width_as_table=true
+            title_alignment=:c
         )
     else
         @printf("\n[MLP]: Troyon Beta_N Limits\n")
@@ -96,22 +94,21 @@ function _print_results_to_stdout(CNN::CNN_Model; kwargs...)
 
         data = hcat(CNN.n, CNN.βₙ_limit, stability)
 
-        hl1 = Highlighter((data, i, j) -> (j in (1, 3)) && (data[i, end] == "Unstable"), crayon"red bold")
-        hl2 = Highlighter((data, i, j) -> (j in (1, 3)) && (data[i, end] == "Marginal"), crayon"yellow bold")
-        hl3 = Highlighter((data, i, j) -> (j == 3) && (data[i, end] == "Stable"), crayon"green")
+        hl1 = TextHighlighter((data, i, j) -> (j in (1, 3)) && (data[i, end] == "Unstable"), crayon"red bold")
+        hl2 = TextHighlighter((data, i, j) -> (j in (1, 3)) && (data[i, end] == "Marginal"), crayon"yellow bold")
+        hl3 = TextHighlighter((data, i, j) -> (j == 3) && (data[i, end] == "Stable"), crayon"green")
 
         model_name = magenta_bold("[CNN model]")
         str_eq_betaN = blue_bold(@sprintf("βₙ=%.2f", eq_betaN))
         pretty_table(
             data;
-            formatters=ft_printf("%5.3f", 2:4),
-            header=header,
-            header_crayon=crayon"white bold",
-            highlighters=(hl1, hl2, hl3),
-            tf=tf_unicode_rounded,
+            formatters=[fmt__printf("%5.3f", 2:4)],
+            column_labels=header,
+            highlighters=[hl1, hl2, hl3],
+            style=TextTableStyle(first_line_column_label=crayon"white bold"),
+            table_format=TextTableFormat(borders=text_table_borders__unicode_rounded),
             title="\n$model_name\n (Equilibrium $str_eq_betaN)",
-            title_alignment=:c,
-            title_same_width_as_table=true
+            title_alignment=:c
         )
     else
         @printf("\n[CNN]: Troyon Beta_N Limits\n")
