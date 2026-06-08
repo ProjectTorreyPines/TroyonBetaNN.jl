@@ -3,10 +3,10 @@ module TroyonBetaNN
 
 using IMAS
 using JSON
-using BSplineKit
 using Printf
 using Plots
 using PrettyTables
+using FastInterpolations
 
 import ONNXRunTime as ORT
 
