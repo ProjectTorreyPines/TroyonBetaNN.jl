@@ -274,14 +274,16 @@ function sample_points_from_equilibrium(TD::Troyon_Data, eqt::IMAS.equilibrium__
     # 18 sample RZ points on a boundary
     TD.sampPoints.R, TD.sampPoints.Z = sample_RZ_points_on_a_boundary(eqt)
 
+    p1d = eqt.profiles_1d
+
     # Construct interpolators for 1D q and norm_pressure profiles
     # 12 sample points representing safety factor profile
-    itp_q = interpolate(Float64.(eqt.profiles_1d.psi_norm), Float64.(eqt.profiles_1d.q), BSplineOrder(4))
-    TD.sampPoints.q = abs.(itp_q.(TD.sampPoints.ψₙ)) # q must be positive
+    TD.sampPoints.q = abs.(cubic_interp(p1d.psi_norm, p1d.q, TD.sampPoints.ψₙ))
 
     # 12 sample points representing normalized pressure profile
-    itp_p = interpolate(Float64.(eqt.profiles_1d.psi_norm), Float64.(eqt.profiles_1d.pressure), BSplineOrder(4))
-    return TD.sampPoints.pressure = itp_p.(TD.sampPoints.ψₙ)
+    TD.sampPoints.pressure = cubic_interp(p1d.psi_norm, p1d.pressure, TD.sampPoints.ψₙ)
+
+    return TD.sampPoints
 end
 
 function sample_RZ_points_on_a_boundary(eqt::IMAS.equilibrium__time_slice)
@@ -317,11 +319,8 @@ function sample_RZ_points_on_a_boundary(eqt::IMAS.equilibrium__time_slice)
     # Find sample boundary points for NN
     th_samp = Vector(0:15) * 22.5 / 180 * π
 
-    itp_R = interpolate(theta, bdy_R, BSplineOrder(4))
-    itp_Z = interpolate(theta, bdy_Z, BSplineOrder(4))
-
-    R_samp = itp_R.(th_samp)
-    Z_samp = itp_Z.(th_samp)
+    R_samp = cubic_interp(theta, bdy_R, th_samp)
+    Z_samp = cubic_interp(theta, bdy_Z, th_samp)
 
     Zmin, Imin = findmin(bdy_Z)
     Zmax, Imax = findmax(bdy_Z)
